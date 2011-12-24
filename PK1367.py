@@ -62,3 +62,58 @@
 #
 #	Ref: http://entertainment.howstuffworks.com/poker.htm
 
+from math import *;
+
+
+# cost of call
+coc = 0;
+
+# projected size of pot
+proj_sop = 0;
+
+# win-rate
+win_rate = coc*sqrt(proj_sop);
+
+# calling descision
+call_dec = enum('showdown','next_bet_round');
+
+# stages in game
+stage= enum('Pre_Flop', 'Flop', 'Fourth_Street', 'Fifth_Street', 'Show_Down');
+
+
+# Game info:
+#	Holds games status
+
+class PyGame:
+	
+	def _init_(self):
+		self.smallblind = 0;
+		self.bigblind = 0;
+		
+
+
+
+
+# Player details:
+#	Holds Player specific info
+
+class My_Player :
+
+	def _init_(self) :
+		self.money = 0;
+		self.mypos = 0;		# my position in game
+		self.hole = [0,0];	# hole cards
+
+	def Action :
+
+
+
+
+
+
+# Other Player details:
+
+class Other_Player :
+
+	def _init_(self):
+
