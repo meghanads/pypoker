@@ -98,6 +98,8 @@ rank = Enum('one_pair', 'two_pairs', 'set', 'straight', 'flush', 'full_house', '
 # Characteristics of opponents
 opp_charc = Enum('bluff', 'simple', 'agressive');
 
+NumCharc = {'bluff' : 1, 'simple' : 2, 'agressive' : 3, 'passive' : 4};
+NameCharc = {1 : 'bluff', 2 : 'simple', 3 : 'agressive', 4 : 'passive'};
 
 
 # Game info:
@@ -117,10 +119,13 @@ opp_charc = Enum('bluff', 'simple', 'agressive');
 
 NW_DEAL = 0;	# new_deal?
 NW_GAME = 0;
+DEBUG = 1;	# debug option
 
 class PyGame:
-	
-	def _init_(self):
+	def __init__(self):
+		global NW_DEAL
+		if(DEBUG):
+			print "PyGame: obj creted..."
 		self.smallblind = 0;
 		self.bigblind = 0;
 		self.dealer = 0;
@@ -137,23 +142,27 @@ class PyGame:
 		if(os.path.isfile('megh_game')):
 			# game already started...
 			self.new_game = 0;
+			if(DEBUG):
+				print "PyGame: Old game..."
 
 		else:
 			# game just started
 			# remove player_stat files if exists
-			if(os.path.isfile('megh_player1_stat'):
+			if(DEBUG):
+				print "PyGame: New_Game..."
+			if(os.path.isfile('megh_player1_stat')):
 					os.remove('megh_player1_stat');
 
-			if(os.path.isfile('megh_player2_stat'):
+			if(os.path.isfile('megh_player2_stat')):
 					os.remove('megh_player2_stat');
 
-			if(os.path.isfile('megh_player3_stat'):
+			if(os.path.isfile('megh_player3_stat')):
 					os.remove('megh_player3_stat');
 
-			if(os.path.isfile('megh_player4_stat'):
+			if(os.path.isfile('megh_player4_stat')):
 					os.remove('megh_player4_stat');
 
-			if(os.path.isfile('megh_player5_stat'):
+			if(os.path.isfile('megh_player5_stat')):
 					os.remove('megh_player5_stat');
 
 			f = open('megh_game','w');
@@ -172,51 +181,61 @@ class PyGame:
 		if(os.path.isfile('megh_deal')):
 			# if file exists... old deal
 			self.new_deal = 0;	# old deal
+			NW_DEAL = 0;
+			if(DEBUG):
+				print "PyGame: old deal ..."
 			f = open('megh_deal','r');
 			lin = f.readline();
 			self.deal_num = int(lin.strip());
-
-			
 
 		else:
 			# new deal
 			# find deal num
 			self.new_deal = 1;
+			NW_DEAL = 1
+			if(DEBUG):
+				print "PyGame: new deal ..."
 			f = open('deals_money.txt');
 			lin = f.readline();
-			fwords = lin.split(' ');
+			fwords = lin.split();
 			w = fwords[1];
 			self.deal_num = int(w.strip());
 			f.close();
-
 			f = open('megh_deal', 'w');
 			f.write(str(self.deal_num));
 			f.write('\n');
 			f.close();
+		
+		if(DEBUG):
+			print"PyGame: deal_num= %d" %self.deal_num
+
 
 		
 		f = open('deal.txt', 'r');
 		lin = f.readline();
-		fwords = lin.split(' ');
+		fwords = lin.split();
 		w = fwords[1];
 		self.dealer = int(w.strip());
-		self.smallblind = (self.delear+1)%7;
-		self.bigblind = (self.delear+2)%7;
+		self.smallblind = (self.dealer+1)%7;
+		self.bigblind = (self.dealer+2)%7;
 
 		lin = f.readline();
-		fwords = lin.split(' ');
+		fwords = lin.split();
 		w = fwords[1];
 		self.stage = NumStage[w.strip()];
 
 		lin = f.readline();
-		fwords = lin.split(' ');
+		fwords = lin.split();
 		w = fwords[1];
 		self.main_pot = int(w.strip());
 
-		NW_DEAL = self.new_deal;
-		NW_GAME = self.new_game;
+		if(DEBUG):
+			print "PyGame: dealer = %d" %(self.dealer)
+			print "PyGame: samllblind = %d" %(self.smallblind)
+			print "PyGame: bigblind = %d" %(self.bigblind)
+			print "PyGame: stage = %s" %(NameStage[self.stage])
+			print "PyGame: main_pot = %d\n" %(self.main_pot)
 
-		
 
 
 
@@ -225,25 +244,28 @@ class PyGame:
 #	Holds Player specific info
 
 class My_Player :
-
-	def _init_(self) :
+	def __init__(self) :
+		global NW_DEAL
+		if(DEBUG):
+			print "My_Player: obj created ..."
 		self.money = 0;
 		self.mypos = 0;		# my position in game
 		self.hole = [0,0];	# hole cards
 		self.money_spent = 0;	# money spent in current deal
 		self.coc = 0;		# cost of call
-		self.load_status();
 
-		
-	def load_status(self) :	# load saved status
 		if(not NW_DEAL):
 			# old deal : load details of player from -> megh_deal
+			if(DEBUG):
+				print "My_Player: Old deal ..."
 
 		else:
 			# new deal : load details from -> inputf.txt, deals_money.txt
+			if(DEBUG):
+				print "My_Player: New deal ..."
 			f = open('inputf.txt', 'r');
 			lin = f.readline();
-			fwords = lin.split(' ');
+			fwords = lin.split();
 			w = fwords[0];
 			self.hole[0] = int(w.strip());
 			w = fwords[1];
@@ -253,21 +275,22 @@ class My_Player :
 			w = fwords[3];
 			self.money_spent = int(w.strip());
 			f.close();
-
+	
 			assert(self.mypos and self.mypos < 7);	# assert
 
 			f = open('deals_money.txt', 'r');
 			for i in range(self.mypos):
 				lin = f.readline();
 			lin = f.readline();
-			fwords = lin.split(' ');
+			fwords = lin.split();
 			w =fwords[1];
 			self.money = int(w.strip());
-
-
-
-
-
+			if(DEBUG):
+				print "My_Player: hole cards = %d %d" %(self.hole[0], self.hole[1])
+				print "My_Player: mypos = %d" %(self.mypos)
+				print "My_Player: money_spent = %d " %(self.money_spent)
+				print "My_Player: money = %d \n" %(self.money)
+	
 
 
 
@@ -277,17 +300,17 @@ class My_Player :
 	def outs(self) :	# evaluating self's hand
 		# 1. Counting outs - cards still in deck that can give potentially winning hand
 		# http://www.youtube.com/watch?v=D96gUcTNlxs
+		pass
 
 	
 	def odds(self) :
+		pass
 
 
 
 
-
-
-
-	def Action :
+	def Action(self) :
+		pass
 
 
 
@@ -295,14 +318,37 @@ class My_Player :
 
 
 # Other Player details:
+#
+# megh_playerx_stat
+# ========================
+#charac	#int
+#
+#
 
 class Other_Player :
-
-	def _init_(self):
+	def __init__(self, stat_fname):
+		global NW_GAME
+		global NW_DEAL
 		self.charac = 0;
-		self.load_status();
+		self.pos = 0;	# position
 
-	def load_status(self) :	# load saved status
+		if(NW_GAME):
+			# stat file does not exists - New game
+			f = open(stat_fname, 'w')
+
+
+			f.close()
+
+		else:
+			# stat file already exists
+			# load statistics
+			f = open(stat_fname, 'r')
+
+			f.close()
+
+
+
+
 
 
 
@@ -315,12 +361,12 @@ class Other_Player :
 
 
 Game = PyGame();
-MyPlayer = MY_Player();
-Player1 = Other_Player('megh_opp1');	# player to my left
-Player2 = Other_Player('megh_opp2');
-Player3 = Other_Player('megh_opp3');
-Player4 = Other_Player('megh_opp4');
-Player5 = Other_Player('megh_opp5');	# player to my right
+MyPlayer = My_Player();
+#Player1 = Other_Player('megh_opp1');	# player to my left
+#Player2 = Other_Player('megh_opp2');
+#Player3 = Other_Player('megh_opp3');
+#Player4 = Other_Player('megh_opp4');
+#Player5 = Other_Player('megh_opp5');	# player to my right
 
 
 
