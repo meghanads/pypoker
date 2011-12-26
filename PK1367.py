@@ -141,7 +141,10 @@ class PyGame:
 		# is new game?
 		if(os.path.isfile('megh_game')):
 			# game already started...
-			self.new_game = 0;
+			f = open('megh_game','r')
+			lin = f.readline();
+			w = lin.strip()
+			self.new_game = int(w);
 			if(DEBUG):
 				print "PyGame: Old game..."
 
@@ -166,15 +169,12 @@ class PyGame:
 					os.remove('megh_player5_stat');
 
 			f = open('megh_game','w');
-			f.write(str(0));
-			f.write('\n');
+			f.write("0\n");
 			f.close();
 
 			self.new_game = 1;
 
 								
-	
-
 
 
 		# is it new deal??
@@ -187,6 +187,7 @@ class PyGame:
 			f = open('megh_deal','r');
 			lin = f.readline();
 			self.deal_num = int(lin.strip());
+			f.close()
 
 		else:
 			# new deal
