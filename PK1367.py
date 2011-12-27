@@ -65,7 +65,6 @@
 #			http://en.wikipedia.org/wiki/Texas_hold_'em
 
 from math import *
-from enum import *
 import os
 import os.path
 
@@ -81,17 +80,17 @@ proj_sop = 0;
 win_rate = coc*sqrt(proj_sop);
 
 # calling decision
-call_dec = Enum('showdown','next_bet_round');
+#call_dec = Enum('showdown','next_bet_round');
 
 # decision
-decision = Enum('fold', 'call', 'raise');
+#decision = Enum('fold', 'call', 'raise');
 
 # stages in game
 NameStage = { 1 : 'Pre_Flop', 2 : 'Flop', 3 : 'Fourth_Street', 4 : 'Fifth_Street', 5 : 'Show_Down', 6 : 'NA'};
 NumStage = { 'Pre_Flop' : 1, 'Flop' : 2, 'Fourth_Street' : 3, 'Fifth_Street' : 4 , 'Show_Down' : 5, 'NA' : 6};
 
 # Rank of hand:
-rank = Enum('one_pair', 'two_pairs', 'set', 'straight', 'flush', 'full_house', 'four_of_kind', 'straight_flush', 'royal_flush');
+#rank = Enum('one_pair', 'two_pairs', 'set', 'straight', 'flush', 'full_house', 'four_of_kind', 'straight_flush', 'royal_flush');
 
 # Characteristics of opponents
 NumCharac = {'bluff' : 1, 'simple' : 2, 'agressive' : 3, 'passive' : 4, 'unknown' : 5};
@@ -100,6 +99,10 @@ NameCharac = {1 : 'bluff', 2 : 'simple', 3 : 'agressive', 4 : 'passive', 5 : 'un
 # Game States:
 NameState = { 1 : 'play', 2 : 'analyz'};
 NumState = {'play' : 1, 'analyz' : 2};
+
+# Suit
+NameSuit = { 0 : 'spade', 1 : 'club', 2 : 'heart', 3 : 'diamond'}
+NumSuit = {'spade' : 0,'club' : 1,'heart' : 2,'diamond' : 3}
 
 
 # Game info:
@@ -121,6 +124,19 @@ NW_DEAL = 0;	# new_deal?
 DEAL_NUM = 0;
 NW_GAME = 0;
 DEBUG = 1;	# debug option
+CURR_STAGE = 0;	#current stage
+
+
+# cards on board:
+
+# Flop:
+CARD1 = 0;
+CARD2 = 0;
+CARD3 = 0;
+# Fourth_Street:
+CARD4 = 0;
+# Fifth_Street:
+CARD5 = 0;
 
 
 
@@ -150,6 +166,13 @@ class PyGame:
 		global NW_DEAL
 		global NW_GAME
 		global DEAL_NUM
+		global CURR_STAGE
+		global CARD1
+		global CARD2
+		global CARD3
+		global CARD4
+		global CARD5
+		
 		if(DEBUG):
 			print "PyGame: obj creted..."
 		self.smallblind = 0;
@@ -163,6 +186,7 @@ class PyGame:
 		self.deal_num = 0;	# deal number
 		self.new_game = 0;
 		self.state = 0;		# state of game
+		self.plrs_in = 0;	# players still in game
 
 		self.card = [0,0,0,0,0,0,0];	# cards can be seen by me
 
@@ -257,6 +281,7 @@ class PyGame:
 		fwords = lin.split();
 		w = fwords[1];
 		self.curr_stage = NumStage[w.strip()];
+		CURR_STAGE = self.curr_stage;
 
 		lin = f.readline();
 		fwords = lin.split();
@@ -281,7 +306,47 @@ class PyGame:
 			self.state = NumState['analyz']
 		else:
 			self.state = NumState['play']
+
+		# Load cards on board:
+		if(self.curr_stage > NumStage['Pre_Flop']):
 			
+			if(self.curr_stage >= NumStage['Flop']):
+				# load 3 cards on board
+				f = open(gv_deal, 'r')
+				lin = f.readline()
+				w = lin.strip();
+				while( w != 'Flop'):
+					lin = f.readline();
+					w = lin.strip();
+				lin = f.readline();
+				ws = lin.split();
+				CARD1 = int(ws[0].strip());
+				CARD2 = int(ws[1].strip());
+				CARD3 = int(ws[2].strip());
+			if(self.curr_stage >= NumStage['Fourth_Street']):
+				# load 4th card
+				lin = f.readline()
+				w = lin.strip()
+				while(w != 'Fourth_Street'):
+					lin = f.readline();
+					w = lin.strip();
+				lin = f.readline();
+				w = lin.strip();
+				CARD4 = int(w);
+			
+			if(self.curr_stage >= NumStage['Fifth_Street']):
+				# load 5th card
+				lin = f.readline()
+				w = lin.strip()
+				while(w != 'Fifth_Street'):
+					lin = f.readline()
+					w = lin.strip()
+				lin = f.readline();
+				w = lin.strip();
+				CARD5 = int(w);
+			f.close();	
+			
+
 
 		if(DEBUG):
 			print "PyGame: dealer = %d" %(self.dealer)
@@ -290,7 +355,12 @@ class PyGame:
 			print "PyGame: curr_stage = %s" %(NameStage[self.curr_stage])
 			print "PyGame: prev_stage = %s" %(NameStage[self.prev_stage])
 			print "PyGame: state = %s" %(NameState[self.state])
-			print "PyGame: main_pot = %d\n" %(self.main_pot)
+			print "PyGame: main_pot = %d" %(self.main_pot)
+			print "PyGame: CARD1 = %d" %(CARD1)
+			print "PyGame: CARD2 = %d" %(CARD2)
+			print "PyGame: CARD3 = %d" %(CARD3)
+			print "PyGame: CARD4 = %d" %(CARD4)
+			print "PyGame: CARD5 = %d\n" %(CARD5)
 
 
 
@@ -301,6 +371,13 @@ class My_Player :
 	def __init__(self) :
 		global NW_DEAL
 		global NW_GAME
+		global DEAL_NUM
+		global CARD1
+		global CARD2
+		global CARD3
+		global CARD4
+		global CARD5
+		global CURR_STAGE
 		if(DEBUG):
 			print "My_Player: obj created ..."
 		self.money = 0;
@@ -351,27 +428,8 @@ class My_Player :
 			print "My_Player: money_left = %d \n" %(self.money_left)
 	
 
-
-
-			
-
-	def outs(self) :	# evaluating self's hand
-		# 1. Counting outs - cards still in deck that can give potentially winning hand
-		# http://www.youtube.com/watch?v=D96gUcTNlxs
-		pass
-
-	
-	def odds(self) :
-		pass
-
-
-
-
 	def Action(self) :
 		pass
-
-
-
 
 
 
@@ -379,7 +437,6 @@ class My_Player :
 #
 # p1_stat
 # ========================
-# deal_charac
 # plr_charac
 # deal_num 1 stat
 # deal_num 2 stat
@@ -394,7 +451,13 @@ class Other_Player :
 	def __init__(self, stat_fname, posn):
 		global NW_GAME
 		global NW_DEAL
-		self.deal_charac = NumCharac['unknown'];	# current deal charac
+		global DEAL_NUM
+		global CARD1
+		global CARD2
+		global CARD3
+		global CARD4
+		global CARD5
+		global CURR_STAGE
 		self.plr_charac = NumCharac['unknown'];	# overall charac
 		self.pos = posn;	# position
 		self.money = 0; # money at start of current deal
@@ -404,8 +467,10 @@ class Other_Player :
 
 		if(DEAL_NUM == 1):
 			# stat file does not exists - New game
-			self.deal_charac = NumCharac['unknown'];
 			self.plr_charac = NumCharac['unknown'];
+			f = open(stat_fname, 'w')
+			f.write(str(self.plr_charac));
+			f.close();
 
 
 		else:
@@ -423,13 +488,39 @@ class Other_Player :
 
 
 
+
+# get nxt player :
 def NxtPlayer(prsnt):
 	if(prsnt == 6):
 		return 1;
 	else:
 		return (prsnt+1);
 
-	
+
+
+def CalcOdds(hole1, hole2):
+	# calculate odds
+	if(DEBUG):
+		print "CalcOdds: calculatig odds ..."
+
+
+def CalcOuts(hole1, hole2):
+	# 1. Counting outs - cards still in deck that can give potentially winning hand
+	# http://www.youtube.com/watch?v=D96gUcTNlxs
+	if(DEBUG):
+		print "CalcOdds: calculating outs ..."
+
+
+def CardVal(card):
+	# returns card value
+	return card%13;
+
+def SuitNum(card):
+	# returns suit number
+	return int(card/13);
+
+
+		
 
 
 # START THE GAME ...
@@ -444,30 +535,31 @@ Player4 = Other_Player(stat_fname = p4_stat, posn = (NxtPlayer(Player3.pos)));	#
 Player5 = Other_Player(stat_fname = p5_stat, posn = (NxtPlayer(Player4.pos)));	# player to my right
 
 
-if(NW_GAME):
-	# if game just started
-	if(DEBUG):
-		print "GAME: new game started ..."
-
-else:
-	# if game already started 
-	if(DEBUG):
-		print "GAME: old game playing ..."
 
 
 
 
 
 
-
-
-if(Game.state == NumState['Play']):
+if(Game.state == NumState['play']):
 	# Play game
 	if(DEBUG):
 		print "GAME: Play state"
 
+	if(NW_GAME):
+		# if game just started
+		if(DEBUG):
+			print "GAME: new game started ..."
 
-elif(Game.state == NumState['Analyz']):
+	else:
+		# if game already started 
+		if(DEBUG):
+			print "GAME: old game playing ..."
+
+
+
+
+elif(Game.state == NumState['analyz']):
 	# END OF CURRENT DEAL:
 	# analyz all players using deal.txt
 	# remove gm_deal
