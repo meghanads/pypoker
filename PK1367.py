@@ -90,11 +90,13 @@ NameStage = { 1 : 'Pre_Flop', 2 : 'Flop', 3 : 'Fourth_Street', 4 : 'Fifth_Street
 NumStage = { 'Pre_Flop' : 1, 'Flop' : 2, 'Fourth_Street' : 3, 'Fifth_Street' : 4 , 'Show_Down' : 5, 'NA' : 6};
 
 # Rank of hand:
-#rank = Enum('one_pair', 'two_pairs', 'set', 'straight', 'flush', 'full_house', 'four_of_kind', 'straight_flush', 'royal_flush');
+NumRank = {'high_card' : 1, 'one_pair' : 2, 'two_pairs' : 3, 'set' : 4, 'straight' : 5, 'flush' : 6, 'full_house' : 7, 'four_of_kind' : 8, 'straight_flush' : 9, 'royal_flush' : 10};
+
+NameRank = {1 : 'high_card', 2 : 'one_pair',3 :  'two_pairs',4 : 'set',5 : 'straight',6 :  'flush',7 : 'full_house',8 :  'four_of_kind',9 : 'straight_flush',10 : 'royal_flush'};
 
 # Characteristics of opponents
-NumCharac = {'bluff' : 1, 'simple' : 2, 'agressive' : 3, 'passive' : 4, 'unknown' : 5};
-NameCharac = {1 : 'bluff', 2 : 'simple', 3 : 'agressive', 4 : 'passive', 5 : 'unknown'};
+NumCharac = {'bluff' : 1, 'simple' : 2, 'agressive' : 3, 'passive' : 4, 'unknown' : 5, 'smart' : 6 };
+NameCharac = {1 : 'bluff', 2 : 'simple', 3 : 'agressive', 4 : 'passive', 5 : 'unknown', 6 : 'smart'};
 
 # Game States:
 NameState = { 1 : 'play', 2 : 'analyz'};
@@ -103,6 +105,8 @@ NumState = {'play' : 1, 'analyz' : 2};
 # Suit
 NameSuit = { 0 : 'spade', 1 : 'club', 2 : 'heart', 3 : 'diamond'}
 NumSuit = {'spade' : 0,'club' : 1,'heart' : 2,'diamond' : 3}
+
+#
 
 
 # Game info:
@@ -125,6 +129,7 @@ DEAL_NUM = 0;
 NW_GAME = 0;
 DEBUG = 1;	# debug option
 CURR_STAGE = 0;	#current stage
+GM_STATE = 0;
 
 
 # cards on board:
@@ -172,7 +177,7 @@ class PyGame:
 		global CARD3
 		global CARD4
 		global CARD5
-		
+		global GM_STATE
 		if(DEBUG):
 			print "PyGame: obj creted..."
 		self.smallblind = 0;
@@ -306,6 +311,7 @@ class PyGame:
 			self.state = NumState['analyz']
 		else:
 			self.state = NumState['play']
+		GM_STATE = self.state;	
 
 		# Load cards on board:
 		if(self.curr_stage > NumStage['Pre_Flop']):
@@ -435,16 +441,15 @@ class My_Player :
 
 # Other Player details:
 #
-# p1_stat
-# ========================
-# plr_charac
-# deal_num 1 stat
-# deal_num 2 stat
-# deal_num 3 stat
-#		.
-#		.
-#		.
-#
+# px_stat file
+# ============================================================
+# plr_charac1	plr_charac2		plr_charac3		plr_charac4
+# Pre_Flop charac list			deal1	deal2	.	.	.
+# Flop charac list				deal1	deal2	.	.	.
+# Fourth_Street charac list		deal1	deal2	.	.	.
+# Fifth_Street charac list		deal1	deal2	.	.	.
+# ============================================================
+
 
 
 class Other_Player :
@@ -458,33 +463,136 @@ class Other_Player :
 		global CARD4
 		global CARD5
 		global CURR_STAGE
-		self.plr_charac = NumCharac['unknown'];	# overall charac
+		self.plr_charac1 = NumCharac['unknown'];	# Pre_Flop charac
+		self.plr_charac2 = NumCharac['unknown'];	# Flop charac
+		self.plr_charac3 = NumCharac['unknown'];	# Fourth_street charac
+		self.plr_charac4 = NumCharac['unknown'];	# Fifth_street charac
 		self.pos = posn;	# position
+		self.hole = [0,0];	# hole cards used for analyz
 		self.money = 0; # money at start of current deal
 
 		if(DEBUG):
 			print "Other_Player %d: obj created ..." %(self.pos)
 
+		f = open(gv_deals_money, 'r')
+		lins = f.readlines();
+		lin = lins[self.pos];
+		ws = lin.split();
+		w = ws[1];
+		self.money = int(w.strip());
+		f.close()
+
+		if(GM_STATE == NumState['analyz']):
+			# load hole cards:
+			if(DEBUG):
+				print "Other_Player %d: Analyzing ..." %self.pos
+			f = open(gv_deal, 'r')
+			lin = f.readline();
+			w = lin.strip();
+			while(w != 'Show_Down'):
+				lin = f.readline()
+				w = lin.strip()
+			lin = f.readline();
+			ws = lin.split()
+			w = ws[0]
+			i = int(w.strip())
+			while(i != self.pos):
+				lin = f.readline()
+				ws = lin.split()
+				w = ws[0]
+				i = int(w.strip())
+			w = ws[1];
+			i =int(w.strip())
+			self.hole[0] = i	
+			w = ws[2];
+			i =int(w.strip())
+			self.hole[1] = i
+			f.close()
+
+			# Analyz...
+			f = open(gv_deal, 'r')
+			lin = f.readline();
+			w = lin.strip();
+			while(w != 'Pre_Flop'):
+				lin = f.readline();
+				w = lin.strip();
+			lin = f.readline();
+			w = lin.strip();
+			while(w != 'End'):
+				# analyz pre_flop
+				ws = lin.split();
+
+
+
+
+
 		if(DEAL_NUM == 1):
 			# stat file does not exists - New game
-			self.plr_charac = NumCharac['unknown'];
+			self.plr_charac1 = NumCharac['unknown'];
+			self.plr_charac2 = NumCharac['unknown'];
+			self.plr_charac3 = NumCharac['unknown'];
+			self.plr_charac4 = NumCharac['unknown'];
 			f = open(stat_fname, 'w')
-			f.write(str(self.plr_charac));
+			s = str(self.plr_charac1)+ ' '+ str(self.plr_charac2)+ ' ' +str(self.plr_charac3)+ ' '+str(self.plr_charac4)
+			f.write(s);
 			f.close();
 
 
-		else:
+		elif(DEAL_NUM > 1):
 			# stat file already exists
 			# load statistics
-			f = open(stat_fname, 'r')
+			if(NW_DEAL and DEAL_NUM > 1):
+				# at start of new deal analyz player
+				f = open(stat_fname, 'r')
+				lin = f.readline()
+				ws = lin.split()
+				self.plr_charac1 = int(ws[0].strip())
+				self.plr_charac2 = int(ws[1].strip())
+				self.plr_charac3 = int(ws[2].strip())
+				self.plr_charac4 = int(ws[3].strip())
+				f.close()
 
-			f.close()
 
 
+		if(DEBUG):
+			print "Other_Player %d: money = %d" %(self.pos, self.money)
+			print "Other_Player %d: hole[0] = %d" %(self.pos, self.hole[0])
+			print "Other_Player %d: hole[1] = %d" %(self.pos, self.hole[1])
 
-	def Analyz(self):
+
+#	def Analyz(self):
 		# Analyz deal.txt and old stat file 
-		pass
+		# read hole cards:
+#		pass
+
+
+def AnalyzCards(hole1, hole2, stage):
+	# what best can be formed by cards, return rank of corr hand
+	# returns [val, best_hand]
+	# val = number of possible 'GOOD' hands
+	val =0;
+	best_hand = 0;
+	if(stage == NumStage['Pre_Flop']):
+		if(CardVal(hole1) == CardVal(hole2)):
+			#pair?
+			val = val + 1;
+			best_hand = NumRank['one_pair']
+		if(SuitNum(hole1) == SuitNum(hole2)):
+			#flush?
+			val = val + 1;
+		if((CardVal(hole1) - CardVal(hole2)) == 1):
+			#stright?
+			val = val + 1;
+		if(((CardVal(hole1) - CardVal(hole2)) == 1) and (SuitNum(hole1) == SuitNum(hole2))):
+			#stright + flush?
+			val = val + 1;
+		if(CardVal(hole1) >=10 or CardVal(hole2) >=10):
+			# high cards?
+			val = val + 1;
+		ret = [val, best_hand];	
+
+		return ret
+	elif(stage == NumStage['Flop']):
 
 
 
