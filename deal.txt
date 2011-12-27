@@ -1,6 +1,6 @@
 Dealer	3
-Stage	Fifth_Street
-Main_Pot	0
+Stage	Show_Down
+Main_Pot	550
 
 Pre_Flop
 1	2	3	4	5	6
@@ -32,3 +32,10 @@ Fifth_Street
 End
 
 Show_Down
+1	15	20
+2	16	46
+3	13	39
+4	10	17
+5	2	41
+6	1	9
+Win	6
