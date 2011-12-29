@@ -94,6 +94,12 @@ NumRank = {'high_card' : 1, 'one_pair' : 2, 'two_pairs' : 3, 'set' : 4, 'straigh
 
 NameRank = {1 : 'high_card', 2 : 'one_pair',3 :  'two_pairs',4 : 'set',5 : 'straight',6 :  'flush',7 : 'full_house',8 :  'four_of_kind',9 : 'straight_flush',10 : 'royal_flush'};
 
+# probability of hand in persentage:
+ProbRank = [50.1, 42.3, 4.75, 2.11, 0.392, 0.197, 0.144, 0.024, 0.00139, 0.000154];
+
+# hand odds: x:1
+OddsRank = [649739, 72192, 4165, 694, 507, 253, 46, 20, 1.36, 0.995];
+
 # Characteristics of opponents
 NumCharac = {'bluff' : 1, 'simple' : 2, 'agressive' : 3, 'passive' : 4, 'unknown' : 5, 'smart' : 6 };
 NameCharac = {1 : 'bluff', 2 : 'simple', 3 : 'agressive', 4 : 'passive', 5 : 'unknown', 6 : 'smart'};
@@ -106,7 +112,11 @@ NumState = {'play' : 1, 'analyz' : 2};
 NameSuit = { 0 : 'spade', 1 : 'club', 2 : 'heart', 3 : 'diamond'}
 NumSuit = {'spade' : 0,'club' : 1,'heart' : 2,'diamond' : 3}
 
-#
+# CardOdds: x:1
+# upto 17 outs
+OneCardOdds = [0, 46, 22, 14, 10, 8, 6.7, 5.6, 4.7, 4.2, 3.6, 3.2, 2.8, 2.5, 2.3, 2.1, 1.9, 1.7];
+TwoCardOdds = [0, 23, 12, 7, 5, 4, 3.2, 2.6, 2.2, 1.9, 1.6, 1.4, 1.2, 1.1, 0.95, 0.85, 0.75, 0.66];
+
 
 
 # Game info:
@@ -443,7 +453,7 @@ class My_Player :
 #
 # px_stat file
 # ============================================================
-# plr_charac1	plr_charac2		plr_charac3		plr_charac4
+# charac						plr_charac1	plr_charac2		plr_charac3		plr_charac4
 # Pre_Flop charac list			deal1	deal2	.	.	.
 # Flop charac list				deal1	deal2	.	.	.
 # Fourth_Street charac list		deal1	deal2	.	.	.
@@ -541,16 +551,14 @@ class Other_Player :
 		elif(DEAL_NUM > 1):
 			# stat file already exists
 			# load statistics
-			if(NW_DEAL and DEAL_NUM > 1):
-				# at start of new deal analyz player
-				f = open(stat_fname, 'r')
-				lin = f.readline()
-				ws = lin.split()
-				self.plr_charac1 = int(ws[0].strip())
-				self.plr_charac2 = int(ws[1].strip())
-				self.plr_charac3 = int(ws[2].strip())
-				self.plr_charac4 = int(ws[3].strip())
-				f.close()
+			f = open(stat_fname, 'r')
+			lin = f.readline()
+			ws = lin.split()
+			self.plr_charac1 = int(ws[0].strip())
+			self.plr_charac2 = int(ws[1].strip())
+			self.plr_charac3 = int(ws[2].strip())
+			self.plr_charac4 = int(ws[3].strip())
+			f.close()
 
 
 
@@ -566,33 +574,166 @@ class Other_Player :
 #		pass
 
 
+# outs:
+NumOuts = {'flush_draw' : 9, 'stright_draw' : 8};
+NameOuts = {9 : 'flush_draw', 8 : 'stright_draw'};
+
+
+
 def AnalyzCards(hole1, hole2, stage):
 	# what best can be formed by cards, return rank of corr hand
-	# returns [val, best_hand]
+	# hand_comp = true if hand is already completed.
+	# returns [val, best_hand, hand_comp, card_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush]
 	# val = number of possible 'GOOD' hands
 	val =0;
 	best_hand = 0;
+	hand_comp = 0;
+	card_odds = 0; # 0 = invalid
+	one_pair = 0;
+	two_pairs = 0;
+	sett = 0;
+	stright = 0;
+	flush = 0;
+	full_house = 0;
+	four_of_kind = 0;
+	stright_flush = 0;
+	high_card = 0;
+	flush_draw = 0; # is it flush draw
+	stright_draw = 0;
+
 	if(stage == NumStage['Pre_Flop']):
+		if(CardVal(hole1) >=10 or CardVal(hole2) >=10):
+			# high cards?
+			val = val + 1;
+			best_hand = NumRank['high_card'];
+			high_card = 1
+		if(SuitNum(hole1) == SuitNum(hole2)):
+			#flush?
+			val = val + 1;
+			best_hand = NumRank['flush']
+			flush = 1;
+		if((CardVal(hole1) - CardVal(hole2)) == 1):
+			#stright?
+			val = val + 1;
+			best_hand = NumRank['stright']
+			stright = 1
+		if(((CardVal(hole1) - CardVal(hole2)) == 1) and (SuitNum(hole1) == SuitNum(hole2))):
+			#stright + flush?
+			val = val + 1;
+			best_hand = NumRank['stright_flush']
+			stright_flush = 1;
 		if(CardVal(hole1) == CardVal(hole2)):
 			#pair?
 			val = val + 1;
 			best_hand = NumRank['one_pair']
-		if(SuitNum(hole1) == SuitNum(hole2)):
-			#flush?
-			val = val + 1;
-		if((CardVal(hole1) - CardVal(hole2)) == 1):
-			#stright?
-			val = val + 1;
-		if(((CardVal(hole1) - CardVal(hole2)) == 1) and (SuitNum(hole1) == SuitNum(hole2))):
-			#stright + flush?
-			val = val + 1;
-		if(CardVal(hole1) >=10 or CardVal(hole2) >=10):
-			# high cards?
-			val = val + 1;
-		ret = [val, best_hand];	
-
+			one_pair = 1;
+		ret = [val, best_hand, hand_comp, card_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
 		return ret
+
 	elif(stage == NumStage['Flop']):
+		# i have 5 cards now, two cards to come
+		cards = [hole1, hole2, CARD1, CARD2, CARD3];
+		vcards = [CardVal(hole1), CardVal(hole2), CardVal(CARD1), CardVal(CARD2), CardVal(CARD3)];
+		scards = [SuitNum(hole1), SuitNum(hole2), SuitNum(CARD1), SuitNum(CARD2), SuitNum(CARD3)];
+
+		[vcards, scards] = SortCards(vcards, scards);
+
+		vcount = [vcards.count(0), vcards.count(1),	vcards.count(2),vcards.count(3),vcards.count(4),vcards.count(5),vcards.count(6),vcards.count(7),vcards.count(8),vcards.count(9),vcards.count(10),vcards.count(11),vcards.count(12)]		
+
+		scount = [scards.count(0), scards.count(1),scards.count(2),scards.count(3)];
+		
+		# find stright
+		tmp = 0;
+		for i in range(13):
+			if(vcount[i] > 0):
+				tmp = tmp + 1;
+				if(tmp == 5):
+					stright = 1;
+					break;
+			else:
+				tmp = 0;
+
+				
+
+			
+		if(stright):
+			if(max(scount)== 5):
+				# stright flush
+				stright_flush = 1;
+				hand_comp = 1;
+				best_hand = NumRank['stright_flush'];
+		if( not hand_comp):
+			if(max(vcount) == 4):
+				#four of kind
+				four_of_kind = 1;
+				hand_comd = 1;
+				best_hand = NumRank['four_of_kind'];
+		if( not hand_comp):
+			if(max(vcount) ==3):
+				if(vcount.count(2) > 0):
+					#full house
+					full_house = 1;
+					hand_comp = 1;
+					best_hand = NumRank['full_house'];
+		if( not hand_comp):
+			if(max(scount) == 5):
+				#flush
+				flush = 1;
+				hand_comp = 1;
+				best_hand = NumRank['flush'];
+		if( not hand_comp):
+			if(stright):
+				#stright:
+				hand_comp = 1;
+				best_hand = NumRank['stright'];
+
+		if( not hand_comp):
+			if(max(vcount) == 2):
+				#pair
+				one_pair = 1;
+				hand_comp = 0;	# nxt two cards can form two pairs or set or full house	
+				best_hand = NumRank['one_pair'];
+			if(vcount.count(2) == 2):
+				#two_pairs
+				two_pairs = 1;
+				hand_comp = 0; # nxt two cards can form full house, calc odds
+				best_hand = NumRank['two_pairs'];
+			if(max(vcount) == 3):
+				#set
+				sett = 1;
+				hand_comp == 0;	# next two cards may form full house, calc odds
+				best_hand = NumRank['set'];
+					
+			if(max(scount)  == 4):
+				# can be flush
+				flush = 1;
+				hand_comp = 0;
+				flush_draw = 1;
+
+			if(max_stright == 4):
+				# can be stright
+				stright = 1;
+				hand_comp = 0;
+
+			if(stright):
+				pass
+
+
+		if( not hand_comp):
+			# calculate best hands odds
+			pass
+
+
+
+# descending order of vcards:
+def SortCards(vcards, scards):
+	for i in range(len(vcards)):
+		for j in range(len(vcards)):
+			if(vcards[i]<vcards[j]):
+				vcards[i],vcards[j] = vcards[j], vcards[i]
+				scards[i],scards[j] = scards[j], scards[i]
+	return [vcards,scards]
+
 
 
 
@@ -615,8 +756,14 @@ def CalcOdds(hole1, hole2):
 def CalcOuts(hole1, hole2):
 	# 1. Counting outs - cards still in deck that can give potentially winning hand
 	# http://www.youtube.com/watch?v=D96gUcTNlxs
+	# for Flop , Fourth_street and Fifth_Street only ....
 	if(DEBUG):
 		print "CalcOdds: calculating outs ..."
+
+
+def CalcPotOdds():
+	# calculate pot odds:
+	
 
 
 def CardVal(card):
@@ -625,7 +772,16 @@ def CardVal(card):
 
 def SuitNum(card):
 	# returns suit number
-	return int(card/13);
+	if(card == 13):
+		return 0;
+	elif(card == 26):
+		return 1;
+	elif(card == 39):
+		return 2;
+	elif( card == 52):
+		return 3;
+	else:
+		return int(card/13);
 
 
 		
