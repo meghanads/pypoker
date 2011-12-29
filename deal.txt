@@ -5,14 +5,14 @@ Main_Pot	550
 Pre_Flop
 1	2	3	4	5	6
 Call 10	Call 10	Rise 25	Rise 5	Rise 10	Call 10
-Call 25	Call25	Call 25	Call 25	Fold 10	Call 25
+Call 25	Call 25	Call 25	Call 25	Fold 10	Call 25
 End
 
 Flop
 42	11	38
 1	2	3	4	5	6
 Call 25	Call 25	Call 25	Call 0	-	Rise 25
-Fold 25	Fold 25	Call 25	Call 25	-	Call25	
+Fold 25	Fold 25	Call 25	Call 25	-	Call 25	
 End
 
 Fourth_Street

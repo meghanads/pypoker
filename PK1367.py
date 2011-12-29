@@ -102,8 +102,8 @@ ProbRank = [50.1, 42.3, 4.75, 2.11, 0.392, 0.197, 0.144, 0.024, 0.00139, 0.00015
 OddsRank = [649739, 72192, 4165, 694, 507, 253, 46, 20, 1.36, 0.995];
 
 # Characteristics of opponents
-NumCharac = {'bluff' : 1, 'simple' : 2, 'agressive' : 3, 'passive' : 4, 'unknown' : 5, 'smart' : 6 };
-NameCharac = {1 : 'bluff', 2 : 'simple', 3 : 'agressive', 4 : 'passive', 5 : 'unknown', 6 : 'smart'};
+NumCharac = {'bluff' : 2, 'simple' : 3, 'agressive' : 4, 'unknown' : 1, 'smart' : 5 };
+NameCharac = {2 : 'bluff', 3 : 'simple', 4 : 'agressive',1 : 'unknown', 5 : 'smart',};
 
 # Game States:
 NameState = { 1 : 'play', 2 : 'analyz'};
@@ -191,6 +191,8 @@ class PyGame:
 		global CARD4
 		global CARD5
 		global GM_STATE
+		global SM_BLIND
+		global BG_BLIND
 		if(DEBUG):
 			print "PyGame: obj creted..."
 		self.smallblind = 0;
@@ -199,14 +201,13 @@ class PyGame:
 		self.main_pot = 0;		# pot of game
 		self.curr_stage = 0;	#curr stage
 		self.prev_stage = 0;	#prev stage
-		self.min_raise = 0;
+		self.min_rise = 0;	# min rise
+		self.to_call = 0;	# money req to call
 		self.new_deal = 0;	# is it new deal??
 		self.deal_num = 0;	# deal number
 		self.new_game = 0;
 		self.state = 0;		# state of game
-		self.plrs_in = 0;	# players still in game
-
-		self.card = [0,0,0,0,0,0,0];	# cards can be seen by me
+		self.plrs_left = 0;	# players still in game
 
 		# is new game?
 		if(os.path.isfile(gm_game)):
@@ -398,6 +399,8 @@ class My_Player :
 		global CARD3
 		global CARD4
 		global CARD5
+		global SM_BLIND
+		global BG_BLIND
 		global CURR_STAGE
 		if(DEBUG):
 			print "My_Player: obj created ..."
@@ -478,6 +481,8 @@ class Other_Player :
 		global CARD4
 		global CARD5
 		global CURR_STAGE
+		global SM_BLIND
+		global BG_BLIND
 		self.plr_charac1 = NumCharac['unknown'];	# Pre_Flop charac
 		self.plr_charac2 = NumCharac['unknown'];	# Flop charac
 		self.plr_charac3 = NumCharac['unknown'];	# Fourth_street charac
@@ -527,41 +532,188 @@ class Other_Player :
 			f.close()
 
 
-#		AnalyzCards(self.hole[0], self.hole[1], NumStage['Fifth_Street'])
 			
 			# Analyz...
-			f = open(gv_deal, 'r')
-			lin = f.readline();
-			w = lin.strip();
-			while(w != 'Pre_Flop'):
-				lin = f.readline();
-				w = lin.strip();
-			lin = f.readline();
-			w = lin.strip();
-			first = 1
-			while(w != 'End'):
-				# analyz pre_flop
-				ws = lin.split();
+			info_pre = LoadBet(NumStage['Pre_Flop'],self.pos);
+			info_flop = LoadBet(NumStage['Flop'],self.pos);
+			info_fourth = LoadBet(NumStage['Fourth_Street'],self.pos);
+			info_fifth = LoadBet(NumStage['Fifth_Street'],self.pos);
 
-				# load bet:
+			# pre:
 
+			[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCards(self.hole[0],self.hole[1], NumStage['Pre_Flop']);
 
-
-				[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCaeds(self.hole[0],self.hole[1], NumStage['Pre_Flop']);
-				if(first):
-					if(self.pos == SM_BLIND or self.pos == BG_BLIND):
+			fcharac = 1;
+			if(len(info_pre)):
+				# if player not folded
+				if(best_hand == NumRank['one_pair']):
+					if(self.pos != SM_BLIND or self.pos != BG_BLIND):
+						for i in range(len(info_pre)-1):
+							if((info_pre[i][0] >= info_pre[i+1][0]) and (info_pre[i][1] >= info_pre[i+1][1])):
+								pass
+							else:
+								fcharac = 0
+								
+						if(fcharac):
+							self.plr_charac1 = NumCharac['agressive'];
+					else:
 						self.plr_charac1 = NumCharac['unknown'];
-					first = 0	
-				else:
-					if(best_hand == ):
+			else:
+				self.plr_charac1 = NumCharac['unknown'];
+
+			
+			#flop:
+
+			[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCards(self.hole[0],self.hole[1], NumStage['Flop']);
+
+			fcharac = 1;
+			if(len(info_flop)):
+				# if player not folded
+				if(best_hand == NumRank['one_pair']):
+					if(self.pos != SM_BLIND or self.pos != BG_BLIND):
+						for i in range(len(info_flop)-1):
+							if((info_flop[i][0] >= info_flop[i+1][0]) and (info_flop[i][1] >= info_flop[i+1][1])):
+								pass
+							else:
+								fcharac = 0
+								
+						if(fcharac):
+							self.plr_charac2 = NumCharac['agressive'];
+					else:
+						self.plr_charac2 = NumCharac['unknown'];
+			else:
+				self.plr_charac2 = NumCharac['unknown'];
+			
+			#fourth:
+
+			[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCards(self.hole[0],self.hole[1], NumStage['Fourth_Street']);
+
+			fcharac = 1;
+			if(len(info_fourth)):
+				# if player not folded
+				if(best_hand == NumRank['one_pair']):
+					if(self.pos != SM_BLIND or self.pos != BG_BLIND):
+						for i in range(len(info_fourth)-1):
+							if((info_fourth[i][0] >= info_fourth[i+1][0]) and (info_fourth[i][1] >= info_fourth[i+1][1])):
+								pass
+							else:
+								fcharac = 0
+								
+						if(fcharac):
+							self.plr_charac3 = NumCharac['agressive'];
+					else:
+						self.plr_charac3 = NumCharac['unknown'];
+			else:
+				self.plr_charac3 = NumCharac['simple'];
 
 
+			#fifth:
+
+			[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCards(self.hole[0],self.hole[1], NumStage['Fifth_Street']);
+
+			fcharac = 1;
+			if(len(info_fifth)):
+				# if player not folded
+				if(best_hand == NumRank['one_pair']):
+					if(self.pos != SM_BLIND or self.pos != BG_BLIND):
+						for i in range(len(info_fifth)-1):
+							if((info_fifth[i][0] >= info_fifth[i+1][0]) and (info_fifth[i][1] >= info_fifth[i+1][1])):
+								pass
+							else:
+								fcharac = 0
+								
+						if(fcharac):
+							self.plr_charac4 = NumCharac['agressive'];
+					else:
+						self.plr_charac4 = NumCharac['unknown'];
+			else:
+				self.plr_charac4 = NumCharac['unknown'];
 
 
+			# append charac:
+			f = open(stat_fname, 'r')
+			lins = f.readlines()
+			for i in range(1,5):
+				lins[i] = lins[i].strip()
+			
+
+			lins[1] = lins[1] + ' ' +str(self.plr_charac1) + '\n'
+			lins[2] = lins[2] + ' ' +str(self.plr_charac2) + '\n'
+			lins[3] = lins[3] + ' ' +str(self.plr_charac3) + '\n'
+			lins[4] = lins[4] + ' ' +str(self.plr_charac4) + '\n'
+
+			# update charac:
+
+			f.close()
+
+			f = open(stat_fname, 'w')
+			f.writelines(lins)
+			f.close();
+
+			# recalculate carac :
+
+			f = open(stat_fname, 'r')
+			lins = f.readlines()
+			for i in range(1,5):
+				lins[i] = lins[i].strip()
+				
+			lpre = lins[1].split()
+			lfold = lins[2].split()
+			lfour = lins[3].split()
+			lfive = lins[4].split()
+
+			for i in range(len(lpre)):
+				lpre[i] = int(lpre[i])
+				lfold[i] = int(lfold[i])
+				lfour[i] = int(lfour[i])
+				lfive[i] = int(lfive[i])
+
+			charc = [0,0,0,0,0,0]
+			charc[1] = lpre.count(NumCharac['unknown']);
+			charc[2] = lpre.count(NumCharac['bluff']);
+			charc[3] = lpre.count(NumCharac['simple']);
+			charc[4] = lpre.count(NumCharac['agressive']);
+			charc[5] = lpre.count(NumCharac['smart']);
+			
+			self.plr_charac1 = charc.index(max(charc));
 
 
+			charc = [0,0,0,0,0,0]
+			charc[1] = lfold.count(NumCharac['unknown']);
+			charc[2] = lfold.count(NumCharac['bluff']);
+			charc[3] = lfold.count(NumCharac['simple']);
+			charc[4] = lfold.count(NumCharac['agressive']);
+			charc[5] = lfold.count(NumCharac['smart']);
+			
+			self.plr_charac2 = charc.index(max(charc));
+
+			charc = [0,0,0,0,0,0]
+			charc[1] = lfour.count(NumCharac['unknown']);
+			charc[2] = lfour.count(NumCharac['bluff']);
+			charc[3] = lfour.count(NumCharac['simple']);
+			charc[4] = lfour.count(NumCharac['agressive']);
+			charc[5] = lfour.count(NumCharac['smart']);
+			
+			self.plr_charac3 = charc.index(max(charc));
 
 
+			charc = [0,0,0,0,0,0]
+			charc[1] = lfive.count(NumCharac['unknown']);
+			charc[2] = lfive.count(NumCharac['bluff']);
+			charc[3] = lfive.count(NumCharac['simple']);
+			charc[4] = lfive.count(NumCharac['agressive']);
+			charc[5] = lfive.count(NumCharac['smart']);
+			
+			self.plr_charac4 = charc.index(max(charc));
+
+			f = open(stat_fname,'r')
+			lins = f.readlines()
+			lins[0] = str(self.plr_charac1)+ ' '+ str(self.plr_charac2)+ ' ' +str(self.plr_charac3)+ ' '+str(self.plr_charac4) + '\n'
+			f.close()
+
+			f = open(stat_fname, 'w')
+			f.writelines(lins)
+			f.close()
 
 
 
@@ -572,8 +724,16 @@ class Other_Player :
 			self.plr_charac3 = NumCharac['unknown'];
 			self.plr_charac4 = NumCharac['unknown'];
 			f = open(stat_fname, 'w')
-			s = str(self.plr_charac1)+ ' '+ str(self.plr_charac2)+ ' ' +str(self.plr_charac3)+ ' '+str(self.plr_charac4)
+			s = str(self.plr_charac1)+ ' '+ str(self.plr_charac2)+ ' ' +str(self.plr_charac3)+ ' '+str(self.plr_charac4) + '\n'
 			f.write(s);
+			f.write('0')
+			f.write('\n')
+			f.write('0')
+			f.write('\n')
+			f.write('0')
+			f.write('\n')
+			f.write('0')
+			f.write('\n')
 			f.close();
 
 
@@ -597,10 +757,57 @@ class Other_Player :
 			print "Other_Player %d: hole[1] = %d" %(self.pos, self.hole[1])
 
 
-#	def Analyz(self):
-		# Analyz deal.txt and old stat file 
-		# read hole cards:
-#		pass
+def LoadBet(stage,posn):
+	# load bet 
+	#[act , val]
+	# returns empty list if has player folded before this stage
+	ret = [];
+	folded = 0;
+	act = 0;
+	val = 0;
+	f = open(gv_deal, 'r');
+	lin = f.readline();
+	w = lin.strip();
+	while(w != NameStage[stage]):
+		lin = f.readline();
+		if(not lin):
+			# stage not reached:
+			if(DEBUG):
+				print "LoadBet: stage not reached"
+			return ret
+		
+		w = lin.strip();
+	if(NameStage[stage] != 'Pre_Flop'):
+		lin = f.readline();	#dummy
+	lin = f.readline();		#dummy2
+
+	lin = f.readline();
+	w = lin.strip();
+	while(w != 'End'):
+		plr = 1;
+		fld = 1;
+		ws = lin.split();
+		for i in range(len(ws)):
+			if(ws[i].strip() == '-'):
+				if(posn == plr):
+					return ret
+				plr = plr + 1;
+				fld = 1
+			else:
+				if(plr == posn):
+					act = NumPlrAct[ws[i].strip()];
+					val = int(ws[i+1].strip());
+					break;
+				if(fld ==1):
+					fld = 2;
+				elif(fld ==2):
+					plr = plr + 1;
+					fld = 1;
+		ret.append([act,val]);
+		lin = f.readline()
+		w = lin.strip();
+	return ret;
+
 
 
 # outs:
@@ -1076,6 +1283,13 @@ def NxtPlayer(prsnt):
 	else:
 		return (prsnt+1);
 
+def PrevPlayer(prsnt):
+	if(prsnt == 1):
+		return 1;
+	else:
+		return (prsnt - 1);
+	
+
 
 
 def CalcOdds(hole1, hole2):
@@ -1116,6 +1330,12 @@ def SuitNum(card):
 		return int(card/13);
 
 
+
+def MinRise(stage, game):
+	# minimum rise:
+	if(game.curr_stage == NumStage['Pre_Flop']):
+		#find 
+
 		
 
 
@@ -1132,42 +1352,63 @@ Player5 = Other_Player(stat_fname = p5_stat, posn = (NxtPlayer(Player4.pos)));	#
 
 
 
-
-
-
-
-
 if(Game.state == NumState['play']):
 	# Play game
 	if(DEBUG):
 		print "GAME: Play state"
 
-	if(NW_GAME):
+#	if(NW_GAME):
 		# if game just started
-		if(DEBUG):
-			print "GAME: new game started ..."
+#		if(DEBUG):
+#			print "GAME: new game started ..."
 
-	else:
+#	else:
 		# if game already started 
-		if(DEBUG):
-			print "GAME: old game playing ..."
+#		if(DEBUG):
+#			print "GAME: old game playing ..."
+
+# CALL OR FOLD:
+
+	[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCards(MyPlayer.hole[0],MyPlayer.hole[1], Game.curr_stage);
+
+	if(CURR_STAGE == NumStage['Pre_Flop']):
+				
+		if(best_hand == NumRank['one_pair']):
+			# CALL
+		elif(flush):
+			# CALL
+		elif(stright):
+			# CALL
+		elif(best_hand == NumRank['high_card']):
+			# CALL
+		else:
+			#FOLD
+
+	elif(CURR_STAGE == NumStage['Flop']):
+		if(hand_comp):
+			#BET ALL
+		elif(best_hand >= NumRank['set']):
+			# CALL
+		else:
+			#fold
+		
+		pass
+	elif(CURR_STAGE == NumStage['Fourth_Street']):
+		#
+		pass
+	elif(CURR_STAGE == NumStage['Fifth_Street']):
+		#
+		pass
 
 
 
 
 elif(Game.state == NumState['analyz']):
 	# END OF CURRENT DEAL:
-	# analyz all players using deal.txt
 	# remove gm_deal
 	# remove gm_state
 	if(DEBUG):
 		print "GAME: Analyz state"
-
-	# Analyz players
-	
-
-
-	# remove files specific to "deal"
 	if(os.path.isfile(gm_deal)):
 		os.remove(gm_deal);
 	if(os.path.isfile(gm_state)):
