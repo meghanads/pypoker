@@ -83,7 +83,8 @@ win_rate = coc*sqrt(proj_sop);
 #call_dec = Enum('showdown','next_bet_round');
 
 # decision
-#decision = Enum('fold', 'call', 'raise');
+NumPlrAct = {'Fold' : 1, 'Call' : 2, 'Rise' : 3};
+NamePlrAct = {1 : 'Fold', 2 : 'Call',3 : 'Rise'};
 
 # stages in game
 NameStage = { 1 : 'Pre_Flop', 2 : 'Flop', 3 : 'Fourth_Street', 4 : 'Fifth_Street', 5 : 'Show_Down', 6 : 'NA'};
@@ -140,6 +141,8 @@ NW_GAME = 0;
 DEBUG = 1;	# debug option
 CURR_STAGE = 0;	#current stage
 GM_STATE = 0;
+SM_BLIND = 0;
+BG_BLIND = 0;
 
 
 # cards on board:
@@ -291,6 +294,8 @@ class PyGame:
 		self.dealer = int(w.strip());
 		self.smallblind = NxtPlayer(self.dealer);
 		self.bigblind = NxtPlayer(self.smallblind);
+		SM_BLIND = self.smallblind;
+		BD_BLIND = self.bigblind;
 
 		lin = f.readline();
 		fwords = lin.split();
@@ -492,6 +497,8 @@ class Other_Player :
 		self.money = int(w.strip());
 		f.close()
 
+
+
 		if(GM_STATE == NumState['analyz']):
 			# load hole cards:
 			if(DEBUG):
@@ -519,6 +526,9 @@ class Other_Player :
 			self.hole[1] = i
 			f.close()
 
+
+#		AnalyzCards(self.hole[0], self.hole[1], NumStage['Fifth_Street'])
+			
 			# Analyz...
 			f = open(gv_deal, 'r')
 			lin = f.readline();
@@ -528,9 +538,28 @@ class Other_Player :
 				w = lin.strip();
 			lin = f.readline();
 			w = lin.strip();
+			first = 1
 			while(w != 'End'):
 				# analyz pre_flop
 				ws = lin.split();
+
+				# load bet:
+
+
+
+				[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCaeds(self.hole[0],self.hole[1], NumStage['Pre_Flop']);
+				if(first):
+					if(self.pos == SM_BLIND or self.pos == BG_BLIND):
+						self.plr_charac1 = NumCharac['unknown'];
+					first = 0	
+				else:
+					if(best_hand == ):
+
+
+
+
+
+
 
 
 
@@ -575,20 +604,18 @@ class Other_Player :
 
 
 # outs:
-NumOuts = {'flush_draw' : 9, 'stright_draw' : 8};
-NameOuts = {9 : 'flush_draw', 8 : 'stright_draw'};
+NumOuts = {'flush_draw' : 9, 'stright_draw' : 8, 'stright_or_flush_draw' : 12, 'stright_flush_draw' : 17};
+NameOuts = {9 : 'flush_draw', 8 : 'stright_draw', 12 : 'stright_or_flush_draw',17 : 'stright_flush_draw'};
 
 
 
 def AnalyzCards(hole1, hole2, stage):
 	# what best can be formed by cards, return rank of corr hand
 	# hand_comp = true if hand is already completed.
-	# returns [val, best_hand, hand_comp, card_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush]
-	# val = number of possible 'GOOD' hands
-	val =0;
-	best_hand = 0;
+	# returns [best_hand, hand_comp, card_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush]
+	best_hand = 0;	# best hand that is already complete at this stage
 	hand_comp = 0;
-	card_odds = 0; # 0 = invalid
+	hand_odds = 0; # 0 = invalid
 	one_pair = 0;
 	two_pairs = 0;
 	sett = 0;
@@ -600,34 +627,30 @@ def AnalyzCards(hole1, hole2, stage):
 	high_card = 0;
 	flush_draw = 0; # is it flush draw
 	stright_draw = 0;
+	stright_flush_draw = 0;
 
 	if(stage == NumStage['Pre_Flop']):
 		if(CardVal(hole1) >=10 or CardVal(hole2) >=10):
 			# high cards?
-			val = val + 1;
 			best_hand = NumRank['high_card'];
 			high_card = 1
 		if(SuitNum(hole1) == SuitNum(hole2)):
 			#flush?
-			val = val + 1;
-			best_hand = NumRank['flush']
 			flush = 1;
 		if((CardVal(hole1) - CardVal(hole2)) == 1):
 			#stright?
-			val = val + 1;
-			best_hand = NumRank['stright']
 			stright = 1
 		if(((CardVal(hole1) - CardVal(hole2)) == 1) and (SuitNum(hole1) == SuitNum(hole2))):
 			#stright + flush?
-			val = val + 1;
-			best_hand = NumRank['stright_flush']
 			stright_flush = 1;
 		if(CardVal(hole1) == CardVal(hole2)):
 			#pair?
-			val = val + 1;
 			best_hand = NumRank['one_pair']
 			one_pair = 1;
-		ret = [val, best_hand, hand_comp, card_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
+		if(DEBUG):
+			print "AnalyzCards: Pre_Flop stage ..."
+
+		ret = [best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
 		return ret
 
 	elif(stage == NumStage['Flop']):
@@ -636,24 +659,51 @@ def AnalyzCards(hole1, hole2, stage):
 		vcards = [CardVal(hole1), CardVal(hole2), CardVal(CARD1), CardVal(CARD2), CardVal(CARD3)];
 		scards = [SuitNum(hole1), SuitNum(hole2), SuitNum(CARD1), SuitNum(CARD2), SuitNum(CARD3)];
 
-		[vcards, scards] = SortCards(vcards, scards);
+		vcount = [vcards.count(0), vcards.count(1),	vcards.count(2),vcards.count(3),vcards.count(4),vcards.count(5),vcards.count(6),vcards.count(7),vcards.count(8),vcards.count(9),vcards.count(10),vcards.count(11),vcards.count(12)]
 
-		vcount = [vcards.count(0), vcards.count(1),	vcards.count(2),vcards.count(3),vcards.count(4),vcards.count(5),vcards.count(6),vcards.count(7),vcards.count(8),vcards.count(9),vcards.count(10),vcards.count(11),vcards.count(12)]		
+		suit_flag =[[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0]];
+
+		# fill suit_flags:
+		for i in range(len(vcount)):
+			if(vcount[i]>0):
+				n = vcount[i]
+				while(n):
+					for j in range(len(vcards)):
+						if(vcards[j] == i):
+							suit_flag[scards[j]][i] = 1;
+							n = n - 1;
+					
+
+
 
 		scount = [scards.count(0), scards.count(1),scards.count(2),scards.count(3)];
-		
-		# find stright
-		tmp = 0;
-		for i in range(13):
-			if(vcount[i] > 0):
-				tmp = tmp + 1;
-				if(tmp == 5):
-					stright = 1;
-					break;
-			else:
-				tmp = 0;
+	
 
-				
+		if(DEBUG):
+			print "AnalyzCards: analyzing cards ...%s" %NameStage[stage]
+			print "cards = %s" %cards
+			print "vcards = %s" %vcards
+			print "scards = %s" %scards
+			print "vcount = %s" %vcount
+			print "scount = %s" %scount
+			print "suit_flag0 = %s" %suit_flag[0]
+			print "suit_flag1 = %s" %suit_flag[1]
+			print "suit_flag2 = %s" %suit_flag[2]
+			print "suit_flag3 = %s" %suit_flag[3]
+
+		# stright?
+		for i in range(len(vcount) - 4):
+			win = vcount[i:(i+5)]
+			if(win.count(0) == 0):
+				stright = 1;
+				break
+			else:
+				stright = 0
+
+			
 
 			
 		if(stright):
@@ -707,32 +757,313 @@ def AnalyzCards(hole1, hole2, stage):
 			if(max(scount)  == 4):
 				# can be flush
 				flush = 1;
-				hand_comp = 0;
 				flush_draw = 1;
 
-			if(max_stright == 4):
-				# can be stright
+			# can be stright?
+			for i in range(len(vcount) - 4):
+				win = vcount[i:(i+5)]
+				if(win.count(0)>1):
+					stright = 0;
+					stright_draw = 0;
+				else:
+					stright = 1
+					stright_draw = 1
+					stright_indx = i
+					break
+
+			# can be stright flush?
+			if(stright and flush):
+				for  i in range(4):
+					if(sum(suit_flag[i]) == 4):
+						sut = i
+						break
+
+				for i in range(stright_indx, stright_indx+5):
+					if(vcount[i]):
+						if(not suit_flag[sut][i]):
+							stright_flush_draw = 0;
+							break
+						else:	
+							stright_flush_draw = 1;
+							stright_flush = 1
+				
+		if(stright_flush_draw):
+			hand_odds = TwoCardOdds[NumOuts['stright_flush_draw']];
+		elif(flush_draw and stright_draw):
+			hand_odds = TwoCardOdds[NumOuts['stright_or_flush_draw']];
+		elif(flush_draw):
+			hand_odds = TwoCardOdds[NumOuts['flush_draw']];
+		elif(stright_draw):
+			hand_odds = TwoCardOdds[NumOuts['stright_draw']];
+
+
+		ret = [best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
+
+		if(DEBUG):
+			print "return = %s\n" %ret
+		return ret
+
+
+	elif(stage == NumStage['Fourth_Street']):
+		# i have 6 cards now, one card to come
+		cards = [hole1, hole2, CARD1, CARD2, CARD3, CARD4];
+		vcards = [CardVal(hole1), CardVal(hole2), CardVal(CARD1), CardVal(CARD2), CardVal(CARD3), CardVal(CARD4)];
+		scards = [SuitNum(hole1), SuitNum(hole2), SuitNum(CARD1), SuitNum(CARD2), SuitNum(CARD3), SuitNum(CARD4)];
+
+		vcount = [vcards.count(0), vcards.count(1),	vcards.count(2),vcards.count(3),vcards.count(4),vcards.count(5),vcards.count(6),vcards.count(7),vcards.count(8),vcards.count(9),vcards.count(10),vcards.count(11),vcards.count(12)]
+
+		suit_flag =[[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0]];
+
+		# fill suit_flags:
+		for i in range(len(vcount)):
+			if(vcount[i]>0):
+				n = vcount[i]
+				while(n):
+					for j in range(len(vcards)):
+						if(vcards[j] == i):
+							suit_flag[scards[j]][i] = 1;
+							n = n - 1;
+					
+
+
+
+		scount = [scards.count(0), scards.count(1),scards.count(2),scards.count(3)];
+	
+
+		if(DEBUG):
+			print "AnalyzCards: analyzing cards ...%s" %NameStage[stage]
+			print "cards = %s" %cards
+			print "vcards = %s" %vcards
+			print "scards = %s" %scards
+			print "vcount = %s" %vcount
+			print "scount = %s" %scount
+			print "suit_flag0 = %s" %suit_flag[0]
+			print "suit_flag1 = %s" %suit_flag[1]
+			print "suit_flag2 = %s" %suit_flag[2]
+			print "suit_flag3 = %s" %suit_flag[3]
+
+		# stright?
+		for i in range(len(vcount) - 4):
+			win = vcount[i:(i+5)]
+			if(win.count(0) == 0):
 				stright = 1;
-				hand_comp = 0;
+				break
+			else:
+				stright = 0
 
+			
+
+			
+		if(stright):
+			if(max(scount)== 5):
+				# stright flush
+				stright_flush = 1;
+				hand_comp = 1;
+				best_hand = NumRank['stright_flush'];
+		if( not hand_comp):
+			if(max(vcount) == 4):
+				#four of kind
+				four_of_kind = 1;
+				hand_comd = 1;
+				best_hand = NumRank['four_of_kind'];
+		if( not hand_comp):
+			if(max(vcount) ==3):
+				if(vcount.count(2) > 0):
+					#full house
+					full_house = 1;
+					hand_comp = 1;
+					best_hand = NumRank['full_house'];
+		if( not hand_comp):
+			if(max(scount) == 5):
+				#flush
+				flush = 1;
+				hand_comp = 1;
+				best_hand = NumRank['flush'];
+		if( not hand_comp):
 			if(stright):
-				pass
-
+				#stright:
+				hand_comp = 1;
+				best_hand = NumRank['stright'];
 
 		if( not hand_comp):
-			# calculate best hands odds
-			pass
+			if(max(vcount) == 2):
+				#pair
+				one_pair = 1;
+				hand_comp = 0;	# nxt two cards can form two pairs or set or full house	
+				best_hand = NumRank['one_pair'];
+			if(vcount.count(2) == 2):
+				#two_pairs
+				two_pairs = 1;
+				hand_comp = 0; # nxt two cards can form full house, calc odds
+				best_hand = NumRank['two_pairs'];
+			if(max(vcount) == 3):
+				#set
+				sett = 1;
+				hand_comp == 0;	# next two cards may form full house, calc odds
+				best_hand = NumRank['set'];
+					
+			if(max(scount)  == 4):
+				# can be flush
+				flush = 1;
+				flush_draw = 1;
+
+			# can be stright?
+			for i in range(len(vcount) - 4):
+				win = vcount[i:(i+5)]
+				if(win.count(0)>1):
+					stright = 0;
+					stright_draw = 0;
+				else:
+					stright = 1
+					stright_draw = 1
+					stright_indx = i
+					break
+
+			# can be stright flush?
+			if(stright and flush):
+				for  i in range(4):
+					if(sum(suit_flag[i]) == 4):
+						sut = i
+						break
+
+				for i in range(stright_indx, stright_indx+5):
+					if(vcount[i]):
+						if(not suit_flag[sut][i]):
+							stright_flush_draw = 0;
+							break
+						else:	
+							stright_flush_draw = 1;
+							stright_flush = 1
+				
+		if(stright_flush_draw):
+			hand_odds = TwoCardOdds[NumOuts['stright_flush_draw']];
+		elif(flush_draw and stright_draw):
+			hand_odds = TwoCardOdds[NumOuts['stright_or_flush_draw']];
+		elif(flush_draw):
+			hand_odds = TwoCardOdds[NumOuts['flush_draw']];
+		elif(stright_draw):
+			hand_odds = TwoCardOdds[NumOuts['stright_draw']];
+
+
+		ret = [best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
+
+		if(DEBUG):
+			print "return = %s\n" %ret
+		return ret
+	elif(stage == NumStage['Fifth_Street']):
+		# i have 7 cards now, NO cards to come
+		cards = [hole1, hole2, CARD1, CARD2, CARD3, CARD4, CARD5];
+		vcards = [CardVal(hole1), CardVal(hole2), CardVal(CARD1), CardVal(CARD2), CardVal(CARD3),CardVal(CARD4),CardVal(CARD5)];
+		scards = [SuitNum(hole1), SuitNum(hole2), SuitNum(CARD1), SuitNum(CARD2), SuitNum(CARD3),SuitNum(CARD4),SuitNum(CARD5)];
+
+		vcount = [vcards.count(0), vcards.count(1),	vcards.count(2),vcards.count(3),vcards.count(4),vcards.count(5),vcards.count(6),vcards.count(7),vcards.count(8),vcards.count(9),vcards.count(10),vcards.count(11),vcards.count(12)]
+
+		suit_flag =[[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0],
+					[0,0,0,0,0,0,0,0,0,0,0,0,0]];
+
+		# fill suit_flags:
+		for i in range(len(vcount)):
+			if(vcount[i]>0):
+				n = vcount[i]
+				while(n):
+					for j in range(len(vcards)):
+						if(vcards[j] == i):
+							suit_flag[scards[j]][i] = 1;
+							n = n - 1;
+					
 
 
 
-# descending order of vcards:
-def SortCards(vcards, scards):
-	for i in range(len(vcards)):
-		for j in range(len(vcards)):
-			if(vcards[i]<vcards[j]):
-				vcards[i],vcards[j] = vcards[j], vcards[i]
-				scards[i],scards[j] = scards[j], scards[i]
-	return [vcards,scards]
+		scount = [scards.count(0), scards.count(1),scards.count(2),scards.count(3)];
+	
+
+		if(DEBUG):
+			print "AnalyzCards: analyzing cards ...%s" %NameStage[stage]
+			print "cards = %s" %cards
+			print "vcards = %s" %vcards
+			print "scards = %s" %scards
+			print "vcount = %s" %vcount
+			print "scount = %s" %scount
+			print "suit_flag0 = %s" %suit_flag[0]
+			print "suit_flag1 = %s" %suit_flag[1]
+			print "suit_flag2 = %s" %suit_flag[2]
+			print "suit_flag3 = %s" %suit_flag[3]
+
+		# stright?
+		for i in range(len(vcount) - 4):
+			win = vcount[i:(i+5)]
+			if(win.count(0) == 0):
+				stright = 1;
+				break
+			else:
+				stright = 0
+
+			
+
+			
+		if(stright):
+			if(max(scount)== 5):
+				# stright flush
+				stright_flush = 1;
+				hand_comp = 1;
+				best_hand = NumRank['stright_flush'];
+		if( not hand_comp):
+			if(max(vcount) == 4):
+				#four of kind
+				four_of_kind = 1;
+				hand_comd = 1;
+				best_hand = NumRank['four_of_kind'];
+		if( not hand_comp):
+			if(max(vcount) ==3):
+				if(vcount.count(2) > 0):
+					#full house
+					full_house = 1;
+					hand_comp = 1;
+					best_hand = NumRank['full_house'];
+		if( not hand_comp):
+			if(max(scount) == 5):
+				#flush
+				flush = 1;
+				hand_comp = 1;
+				best_hand = NumRank['flush'];
+		if( not hand_comp):
+			if(stright):
+				#stright:
+				hand_comp = 1;
+				best_hand = NumRank['stright'];
+
+		if( not hand_comp):
+			if(max(vcount) == 3):
+				#set
+				sett = 1;
+				hand_comp == 1;	# next two cards may form full house, calc odds
+				best_hand = NumRank['set'];
+		if( not hand_comp):		
+			if(vcount.count(2) == 2):
+				#two_pairs
+				two_pairs = 1;
+				hand_comp = 1; # nxt two cards can form full house, calc odds
+				best_hand = NumRank['two_pairs'];
+		if( not hand_comp):
+			if(max(vcount) == 2):
+				#pair
+				one_pair = 1;
+				hand_comp = 1;	# nxt two cards can form two pairs or set or full house	
+				best_hand = NumRank['one_pair'];
+											
+
+		ret = [best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
+
+		if(DEBUG):
+			print "return = %s\n" %ret
+		return ret
+	else:
+		ret = [best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
 
 
 
@@ -763,6 +1094,7 @@ def CalcOuts(hole1, hole2):
 
 def CalcPotOdds():
 	# calculate pot odds:
+	pass
 	
 
 
