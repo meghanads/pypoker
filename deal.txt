@@ -1,34 +1,80 @@
 Dealer	3
-Stage	Show_Down
+Stage	Fifth_Street
 Main_Pot	550
 
 Pre_Flop
-1	2	3	4	5	6
-Call 10	Call 10	Rise 25	Rise 5	Rise 10	Call 10
-Call 25	Call 25	Call 25	Call 25	Fold 10	Call 25
+Rise 5
+Rise 10
+Call 10
+Call 10
+Call 10
+Rise 25
+Call 25
+Fold 10
+Call 25
+Call 25
+Call 25
+Call 25
 End
 
 Flop
 42	11	38
-1	2	3	4	5	6
-Call 25	Call 25	Call 25	Call 0	-	Rise 25
-Fold 25	Fold 25	Call 25	Call 25	-	Call 25	
+Call 0
+-
+Rise 25
+Call 25
+Call 25
+Call 25
+Call 25
+-
+Call 25
+Fold 25
+Fold 25
+Call 25
 End
 
 Fourth_Street
-12
-1	2	3	4	5	6
--	-	Call 50	Rise 50	-	Call 50
--	-	Call 100	Rise 100	-	Call 100
--	-	Call 100	Call 100	-	Call 100
+23
+Rise 50
+-
+Call 50
+-
+-
+Call 50
+Rise 100
+-
+Call 100
+-
+-
+Call 100
+Call 100
+-
+Call 100
+-
+-
+Call 100
 End
 
 Fifth_Street
 2
-1	2	3	4	5	6
--	-	Call 250	Call 0	-	Rise 250
--	-	Call 400	Fold 0	-	Rise 400
--	-	Call 400	-	-	Call 400
+Call 0
+-
+Rise 250
+-
+-
+Call 250
+Fold 0
+-
+Rise 400
+-
+-
+Call 400
+-
+-
+Call 400
+-
+-
+Call 400
 End
 
 Show_Down
