@@ -1,5 +1,5 @@
 		Dealer			3
-		Stage			Fifth_Street
+		Stage			Flop
 		Main_Pot		400
 		
 		Pre_Flop 

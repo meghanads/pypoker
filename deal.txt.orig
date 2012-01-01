@@ -1,5 +1,5 @@
 		Dealer			3
-		Stage			Fifth_Street
+		Stage			Flop
 		Main_Pot		400
 		
 		Pre_Flop 
@@ -20,7 +20,7 @@
 
 		Flop 
 		42		11		38
-		
+			
 		4	Call 0
 		5	-
 		6	Rise 25
@@ -31,7 +31,8 @@
 		End
 
 		Fourth_Street
-		12	
+		12
+		
 		4	Rise 50
 		5	-
 		6	Call 50
@@ -45,7 +46,7 @@
 
 		Fifth_Street
 		2
-
+		
 		4	Call 0
 		5	-	
 		6	Rise 250 
@@ -63,3 +64,4 @@
 		5			2		41
 		6			1		9
 		Win	6
+
