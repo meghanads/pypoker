@@ -89,16 +89,6 @@ NumRank = {'high_card' : 1, 'one_pair' : 2, 'two_pairs' : 3, 'set' : 4, 'straigh
 
 NameRank = {1 : 'high_card', 2 : 'one_pair',3 :  'two_pairs',4 : 'set',5 : 'straight',6 :  'flush',7 : 'full_house',8 :  'four_of_kind',9 : 'straight_flush',10 : 'royal_flush'};
 
-# probability of hand in persentage:
-ProbRank = [50.1, 42.3, 4.75, 2.11, 0.392, 0.197, 0.144, 0.024, 0.00139, 0.000154];
-
-# hand odds: x:1
-OddsRank = [649739, 72192, 4165, 694, 507, 253, 46, 20, 1.36, 0.995];
-
-# Characteristics of opponents
-NumCharac = {'bluff' : 2, 'simple' : 3, 'agressive' : 4, 'unknown' : 1, 'smart' : 5 };
-NameCharac = {2 : 'bluff', 3 : 'simple', 4 : 'agressive',1 : 'unknown', 5 : 'smart',};
-
 # Game States:
 NameState = { 1 : 'play', 2 : 'analyz'};
 NumState = {'play' : 1, 'analyz' : 2};
@@ -107,24 +97,18 @@ NumState = {'play' : 1, 'analyz' : 2};
 NameSuit = { 0 : 'spade', 1 : 'club', 2 : 'heart', 3 : 'diamond'}
 NumSuit = {'spade' : 0,'club' : 1,'heart' : 2,'diamond' : 3}
 
-# CardOdds: x:1
-# upto 17 outs
-OneCardOdds = [0, 46, 22, 14, 10, 8, 6.7, 5.6, 4.7, 4.2, 3.6, 3.2, 2.8, 2.5, 2.3, 2.1, 1.9, 1.7];
-TwoCardOdds = [0, 23, 12, 7, 5, 4, 3.2, 2.6, 2.2, 1.9, 1.6, 1.4, 1.2, 1.1, 0.95, 0.85, 0.75, 0.66];
-
-
 
 # Game info:
 #	Holds games status
 
 
-# megh_game
+# file: megh_game
 # =======================
 # new_game
 
 
 
-# megh_deal
+# file: megh_deal
 # =======================
 # deal_num
 #
@@ -137,8 +121,6 @@ CURR_STAGE = 0;	#current stage
 GM_STATE = 0;
 SM_BLIND = 0;
 BG_BLIND = 0;
-
-
 
 
 # cards on board:
