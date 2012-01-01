@@ -1,0 +1,87 @@
+Dealer	3
+Stage	Fifth_Street
+Main_Pot	550
+
+Pre_Flop
+Rise 5
+Rise 10
+Call 10
+Call 10
+Call 10
+Rise 25
+Call 25
+Fold 10
+Call 25
+Call 25
+Call 25
+Call 25
+End
+
+Flop
+42	11	38
+Call 0
+-
+Rise 25
+Call 25
+Call 25
+Call 25
+Call 25
+-
+Call 25
+Fold 25
+Fold 25
+Call 25
+End
+
+Fourth_Street
+23
+Rise 50
+-
+Call 50
+-
+-
+Call 50
+Rise 100
+-
+Call 100
+-
+-
+Call 100
+Call 100
+-
+Call 100
+-
+-
+Call 100
+End
+
+Fifth_Street
+2
+Call 0
+-
+Rise 250
+-
+-
+Call 250
+Fold 0
+-
+Rise 400
+-
+-
+Call 400
+-
+-
+Call 400
+-
+-
+Call 400
+End
+
+Show_Down
+1	15	20
+2	16	46
+3	13	39
+4	10	17
+5	2	41
+6	1	9
+Win	6

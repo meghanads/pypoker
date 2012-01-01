@@ -1,9 +1,4 @@
 #################################################
-#	Name : Meghanad Shingate
-#	email : meghanads@iitb.ac.in
-#	RollNo: 09307608
-#	IIT Bombay
-#################################################	
 #			*POKER*
 #	(No Limit Texas Hold'em Poker)
 #
@@ -132,7 +127,7 @@ TwoCardOdds = [0, 23, 12, 7, 5, 4, 3.2, 2.6, 2.2, 1.9, 1.6, 1.4, 1.2, 1.1, 0.95,
 NW_DEAL = 0;	# new_deal?
 DEAL_NUM = 0;
 NW_GAME = 0;
-DEBUG = 0;	# debug option
+DEBUG = 1;	# debug option
 CURR_STAGE = 0;	#current stage
 GM_STATE = 0;
 SM_BLIND = 0;
@@ -176,18 +171,6 @@ gv_outputf = 'outputf.txt'
 # given
 bg_bet = 10;
 sm_bet =5
-
-def CheckFiles():
-	if(not(os.path.isfile(gv_deals_money))):
-		print "ERR: deals_money.txt NOT FOUND"
-		exit(1);
-	if(not(os.path.isfile(gv_deal))):
-		print "ERR: deal.txt NOT FOUND"
-		exit(1);
-	if(not(os.path.isfile(gv_inputf))):
-		print "ERR: inputf.txt NOT FOUND"
-		exit(1);
-
 
 class PyGame:
 	def __init__(self):
@@ -549,8 +532,6 @@ def AnalyzCards(hole1, hole2, stage):
 			print "AnalyzCards: Pre_Flop stage ..."
 
 		ret = [best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush];
-		if(DEBUG):
-			print "AnalyzCards: ret = %s" %ret
 		return ret
 
 	elif(stage == NumStage['Flop']):
@@ -1047,22 +1028,19 @@ def LoadStage(stage):
 		print "LoadStage: %s = %s" %(NameStage[stage], ret)
 	return ret
 
-# cost of call
+
 def CoC(stage):
 	st = LoadStage(stage);
-	ret = -1;
 	if(not st):
-		ret = 0;
+		return 0;
 	else:
 		re = range(len(st));
 		re.reverse();
 		for i in re:
 			if(st[i][1]>= NumPlrAct['Call']):
-				ret= st[i][2];
-				break;
-	if(DEBUG):
-		print "CoC: ret = %d" %ret
-	return ret
+				return s[i][2];
+	# should not get here.
+	return -1
 	
 
 
@@ -1111,11 +1089,23 @@ def MinRise(stage):
 			ret = lst_bet + riseby
 		else:
 			ret = riseby
-	if(DEBUG):
-		print "MinRise: riseby = %d, rise = %d" %(riseby, ret)
+
+	print "MinRise: riseby = %d, rise = %d" %(riseby, ret)
 	return ret
 		
 
+#	elif(stage == NumStage['Flop']):
+		# innitial call = check
+		# initial rise = bigblind
+		# rerise : prev rise + prev rise by
+		
+#	elif(stage == NumStage['Fourth_Street']):
+		# bet = 2*bigblind
+#		pass
+
+#	elif(stage == NumStage['Fifth_Street']):
+		#find
+#		pass
 
 
 # Call
@@ -1139,7 +1129,7 @@ def Fold():
 def Rise(amt):
 	if(DEBUG):
 		print "My_Player: Rised ..."
-	f = open(gv_outputf, 'w')
+	f = open(gv_outputf)
 	f.write(str(amt))
 	f.close()
 	
@@ -1151,9 +1141,14 @@ def PotOdds(main_pot, coc):
 
 # START THE GAME ...
 
-CheckFiles();
+
 Game = PyGame();
 MyPlayer = My_Player();
+#Player1 = Other_Player(stat_fname = p1_stat, posn = (NxtPlayer(MyPlayer.mypos)));	# player to my left
+#Player2 = Other_Player(stat_fname = p2_stat, posn = (NxtPlayer(Player1.pos)));	# 
+#Player3 = Other_Player(stat_fname = p3_stat, posn = (NxtPlayer(Player2.pos)));	# 
+#Player4 = Other_Player(stat_fname = p4_stat, posn = (NxtPlayer(Player3.pos)));	# 
+#Player5 = Other_Player(stat_fname = p5_stat, posn = (NxtPlayer(Player4.pos)));	# player to my right
 
 
 if(Game.state == NumState['play']):
@@ -1175,6 +1170,8 @@ if(Game.state == NumState['play']):
 	stright_flush = 0;
 
 
+	MinRise(NumStage['Fifth_Street']);
+
 	# Play ...
 
 	if(CURR_STAGE == NumStage['Pre_Flop']):
@@ -1183,20 +1180,14 @@ if(Game.state == NumState['play']):
 		[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCards(MyPlayer.hole[0],MyPlayer.hole[1], NumStage['Pre_Flop']);
 
 		if(flush or stright or one_pair or (best_hand >= NumRank['high_card'])):
-			# CALL		
-			if(MyPlayer.money_left > CoC(NumStage['Pre_Flop'])):
-				Call();
-			else:
-				Fold();
+			# CALL
+			Call()
 		else:
 			#FOLD
 			if(10*random() >6):
 				Fold()
 			else:
-				if(MyPlayer.money_left > CoC(NumStage['Pre_Flop'])):
-					Call()
-				else:
-					Fold();
+				Call()
 
 	elif(CURR_STAGE == NumStage['Flop']):
 
@@ -1212,25 +1203,16 @@ if(Game.state == NumState['play']):
 				if(MyPlayer.money_left > rise_amt):
 					Rise(rise_amt);
 			else:
-				if(MyPlayer.money_left > CoC(NumStage['Flop'])):
-					Call()
-				else:
-					Fold()
+				Call()
 		elif(best_hand > NumRank['one_pair']):
 			# call
-			if(MyPlayer.money_left > CoC(NumStage['Flop'])):
-				Call();
-			else:
-				Fold();
+			Call()
 		elif(stright or flush):
 			# call - need to see outs
 			# call 0 if possible
 			pot_odds = PotOdds(NumStage['Flop'], CoC(NumStage['Flop']));
 			if(pot_odds < hand_odds):
-				if(MyPlayer.money_left > CoC(NumStage['Flop'])):
-					Call();
-				else:
-					Fold();
+				Call()
 			else:
 				Fold()
 		else:
@@ -1251,19 +1233,13 @@ if(Game.state == NumState['play']):
 				if(MyPlayer.money_left >rise_amt):
 					Rise(rise_amt);
 			else:
-				if(MyPlayer.money_left > CoC(NumStage['Fourth_Street'])):
-					Call();
-				else:
-					Fold();
+				Call();
 
 		elif(stright or flush):
 			#call
 			pot_odds = PotOdds(NumStage['Fourth_Street'], Coc(NumStage['Fourth_Street']));
 			if(pot_odds < hand_odds):
-				if(MyPlayer.money_left > CoC(NumStage['Fourth_Street'])):
-					Call();
-				else:
-					Fold();
+				Call();
 			else:
 				Fold()
 		else:
@@ -1276,25 +1252,7 @@ if(Game.state == NumState['play']):
 		[best_hand, hand_comp, hand_odds, high_card, one_pair, two_pairs, sett, stright, flush, full_house, four_of_kind, stright_flush] = AnalyzCards(MyPlayer.hole[0],MyPlayer.hole[1], NumStage['Fifth_Street']);
 		if(hand_comp and (best_hand >= NumRank['set'])):
 			#call
-			if(MyPlayer.money_left > CoC(NumStage['Fifth_Street'])):
-				if(best_hand >=NumRank['straight']):
-					if(10*random() >6):
-						# ALL IN
-						rise_amt = 0;
-						r = MinRise(NumStage['Fifth_Street']);
-						if(r>0):
-							rise_amt = 2*r;
-						if(rise_amt > 0):
-							if(MyPlayer.money_left > rise_amt):
-								Rise(rise_amt);
-							else: 
-								Call();			
-					else:
-						Call();
-				else:
-					Call();
-			else:
-				Fold();
+			Call()
 		else:
 			#fold
 			Fold()
