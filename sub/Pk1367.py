@@ -123,7 +123,6 @@ TwoCardOdds = [0, 23, 12, 7, 5, 4, 3.2, 2.6, 2.2, 1.9, 1.6, 1.4, 1.2, 1.1, 0.95,
 # new_game
 
 
-
 # megh_deal
 # =======================
 # deal_num
@@ -258,8 +257,6 @@ class PyGame:
 			self.new_game = 1;
 			NW_GAME = 1;
 
-								
-
 
 		# is it new deal??
 		if(os.path.isfile(gm_deal)):
@@ -361,7 +358,7 @@ class PyGame:
 		f.close()
 
 
-		if(NameStage[self.prev_stage] == 'Show_Down'):
+		if(NameStage[self.curr_stage] == 'Show_Down'):
 			self.state = NumState['analyz']
 		else:
 			self.state = NumState['play']
@@ -1025,23 +1022,33 @@ def LoadStage(stage):
 		lin = f.readline()
 	lin = f.readline()
 	lin = f.readline()
-	w = lin.strip()
+	lin = lin.strip()
+	if(lin):
+		w = lin.strip()
+	else:
+		w = 'End'
+		
 	while(w != 'End' and lin):
 		ws = lin.split()
-		if(ws[1].strip() =='Rise'):
-			h = [int(ws[0].strip()), NumPlrAct['Rise'], int(ws[2].strip())]
-			ret.append(h);
-		elif(ws[1].strip() == 'Call'):
-			h = [int(ws[0].strip()), NumPlrAct['Call'], int(ws[2].strip())]
-			ret.append(h);
-		elif(ws[1].strip() == 'Fold'):
-			h = [int(ws[0].strip()), NumPlrAct['Fold'], int(ws[2].strip())]
-			ret.append(h)
-		elif(ws[1].strip() == '-'):
-			h = [int(ws[0].strip()), NumPlrAct['Fold'], -1]
-			ret.append(h)
+		if(len(ws) >= 2):
+			if(ws[1].strip() =='Rise'):
+				h = [int(ws[0].strip()), NumPlrAct['Rise'], int(ws[2].strip())]
+				ret.append(h);
+			elif(ws[1].strip() == 'Call'):
+				h = [int(ws[0].strip()), NumPlrAct['Call'], int(ws[2].strip())]
+				ret.append(h);
+			elif(ws[1].strip() == 'Fold'):
+				h = [int(ws[0].strip()), NumPlrAct['Fold'], int(ws[2].strip())]
+				ret.append(h)
+			elif(ws[1].strip() == '-'):
+				h = [int(ws[0].strip()), NumPlrAct['Fold'], -1]
+				ret.append(h)
 		lin = f.readline()
-		w = lin.strip()
+		lin = lin.strip()
+		if(lin):
+			w = lin.strip()
+		else:
+			w = 'End'
 
 	if(DEBUG):
 		print "LoadStage: %s = %s" %(NameStage[stage], ret)
@@ -1081,6 +1088,7 @@ def MinRise(stage):
 			riseby = bg_bet;
 		else:
 			riseby = 2*bg_bet;
+		riseby2 = 0;	
 		if(st):
 			
 			re =range(len(st));
@@ -1098,17 +1106,17 @@ def MinRise(stage):
 						c = i
 						break
 	
-			re = range(len(st))
-			re.reverse()
-			for i in re:
-				if(st[i][1] >= NumPlrAct['Call']):
-					lst_bet = st[i][2];
-					break
+#			re = range(len(st))
+#			re.reverse()
+#			for i in re:
+#				if(st[i][1] >= NumPlrAct['Call']):
+#					lst_bet = st[i][2];
+#					break
 			
 			if(r>-1):
-				riseby = st[r][2] - st[c][2];
+				riseby2 = st[r][2] - st[c][2];
 		
-			ret = lst_bet + riseby
+			ret = max(riseby2, riseby);
 		else:
 			ret = riseby
 	if(DEBUG):
