@@ -1,65 +1,11 @@
 		Dealer			3
-		Stage			Flop
+		Stage			Pre_Flop
 		Main_Pot		400
 		
 		Pre_Flop 
 		
 		4	Rise 5		
-		5	Rise 10		
-		6	Call 10
-		1	Call 10		
-		2	Call 10
-		3	Rise 25		
-		4	Call 25		
-		5 	Fold 10
-		6	Call 25 
-		1	Call 25
-		2	Call 25	
-		3	Call 25
-		End
+		5	Rise 10
 
-		Flop 
-		42		11		38
-		
-		4	Call 0
-		5	-
-		6	Rise 25
-		1	Call 25		
-		2	Call 25
-		3	Call 25	
-		4	Call 25
-		End
 
-		Fourth_Street
-		12	
-		4	Rise 50
-		5	-
-		6	Call 50
-		1	Fold 0	
-		2	Fold 0
-		3	Rise 100	
-		4	Call 100
-		5	-	
-		6	Call 100
-		End
 
-		Fifth_Street
-		2
-
-		4	Call 0
-		5	-	
-		6	Rise 250 
-		1	-	
-		2	-
-		3	Call 250
-		4	Fold 0
-		End
-
-		Show_Down
-		1			15		20
-		2			16		46
-		3			13	 	39
-		4			10		17
-		5			2		41
-		6			1		9
-		Win	6
