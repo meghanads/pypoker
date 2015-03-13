@@ -1,0 +1,1 @@
+This is project of making Poker game player for competition in Techfest 2012 at IIT Bombay for "CODE'EM POKER" competition. This code won FIRST prize.
